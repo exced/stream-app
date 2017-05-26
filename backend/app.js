@@ -24,6 +24,4 @@ app.use(routes);
 app.use(passport.initialize());
 require('./config/passport')(passport);
 
-
-
 module.exports = app;

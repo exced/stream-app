@@ -1,7 +1,9 @@
 let User = require('../models/user'),
     config = require('../config/database'),
     jwt = require('jwt-simple'),
+    sockets = require('./sockets'),
     uuid = require('uuid');
+
 
 var functions = {
 
@@ -27,8 +29,8 @@ var functions = {
                     user.comparePassword(req.body.password, function (err, isMatch) {
                         if (isMatch && !err) {
                             let token = jwt.encode(user, config.secret);
-                            let socket = uuid.v4();
-                            res.status(200).json({ success: true, token: token, socket: socket });
+                            sockets.add(req.body.username, token);
+                            res.status(200).json({ success: true, token: token });
                         } else {
                             return res.status(403).send({ success: false, msg: 'Authenticaton failed, wrong password.' });
                         }
@@ -62,8 +64,8 @@ var functions = {
                 }
                 else {
                     let token = jwt.encode(newUser, config.secret);
-                    let socket = uuid.v4();
-                    res.status(200).json({ success: true, token: token, socket: socket });
+                    sockets.add(req.body.username, token);
+                    res.status(200).json({ success: true, token: token });
                 }
             })
         }

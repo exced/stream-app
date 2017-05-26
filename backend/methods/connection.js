@@ -1,9 +1,22 @@
-// {username: string, socket: string}
-function Connection(username, socket) {
+// {username: string, socketid: string}
+function Connection(username, socketid) {
     this.username = username;
-    this.socket = socket;
+    this.socketid = socketid;
 }
 
-Connection.prototype.listen = function() {
-    
+Connection.prototype.listenAndServe = function () {
+    let nsp = io.of(this.namespace);
+    nsp.on('connection', function (socket) {
+
+        socket.on('emit', function (id, msg) {
+            socket.broadcast.to(id).emit('emit', msg);
+        });
+
+        socket.on('notify', function (id, msg) {
+            socket.broadcast.to(id).emit('emit', msg);
+        });
+
+    });
 }
+
+module.exports = Connection;

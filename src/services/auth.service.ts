@@ -50,10 +50,9 @@ export class AuthService {
             .map((response: Response) => {
                 let res = response.json();
                 let token = res && res.token;
-                let socket = res && res.socket;
-                if (token && socket) {
+                if (token) {
                     this.setToken(token);
-                    this.socketService.setSocketAddress(socket);
+                    this.socketService.setSocketId(token);
                     return true;
                 } else {
                     return false;
@@ -67,10 +66,9 @@ export class AuthService {
             .map((response: Response) => {
                 let res = response.json();
                 let token = res && res.token;
-                let socket = res && res.socket;
-                if (token && socket) {
+                if (token) {
                     this.setToken(token);
-                    this.socketService.setSocketAddress(socket);
+                    this.socketService.setSocketId(token);
                     return true;
                 } else {
                     return false;

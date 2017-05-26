@@ -14,7 +14,7 @@ export interface Notification {
 export class SocketService {
 
     private socket: any;
-    private socketAddress: string;
+    private socketId: string;
     private URL: string;
     private username: any;
 
@@ -22,9 +22,9 @@ export class SocketService {
         this.URL = appSettingsService.URL;
     }
 
-    public setSocketAddress(socketAddress: string) {
-        this.socketAddress = socketAddress;
-        localStorage.setItem(LOCAL_STORAGE_SOCKET, socketAddress);
+    public setSocketId(socketId: string) {
+        this.socketId = socketId;
+        localStorage.setItem(LOCAL_STORAGE_SOCKET, socketId);
     }
 
     public emit(message: string): void {
@@ -47,7 +47,7 @@ export class SocketService {
     public notify(username: string): Observable<string> {
         this.socket.emit('notify', username);
         return new Observable(observer => {
-            this.socket = io(this.URL + '/' + this.socketAddress);
+            this.socket = io(this.URL + '/' + this.socketId);
             this.socket.on('emit', (data) => {
                 observer.next(data);
             });
@@ -59,7 +59,7 @@ export class SocketService {
 
     public onNotify(): Observable<Notification> {
         return new Observable(observer => {
-            this.socket = io(this.URL + '/' + this.socketAddress);
+            this.socket = io(this.URL + '/' + this.socketId);
             this.socket.on('notify', (data) => {
                 let notification = <Notification>data;
                 observer.next(notification);
