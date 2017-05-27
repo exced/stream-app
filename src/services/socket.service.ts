@@ -27,23 +27,23 @@ export class SocketService {
         localStorage.setItem(LOCAL_STORAGE_SOCKET, socketId);
     }
 
-    public emit(socketId: string, message: string): void {
-        let socket = io(this.URL + '/' + socketId);
-        socket.emit('emit', message);
-    }
-
-    public on(socketId: string): Observable<string> {
+    /**
+     * Send a call to a contact
+     * @param contactname 
+     */
+    public call(contactname: string): Observable<Notification> {
         return new Observable(observer => {
-            let socket = io(this.URL + '/' + socketId);
-            socket.on('emit', (data) => {
-                observer.next(data);
-            });
+            let socket = io(this.URL + '/' + this.socketId);
+            socket.emit('notify', contactname);
             return () => {
                 socket.disconnect();
             };
         });
     }
 
+    /**
+     * Notify each time you receive a call from server
+     */
     public notify(): Observable<Notification> {
         return new Observable(observer => {
             this.socket = io(this.URL + '/' + this.socketId);

@@ -1,4 +1,7 @@
-let uuid = require('uuid');
+let uuid = require('uuid'),
+    app = require('../app'),
+    http = require('http').Server(app),
+    io = require('socket.io')(http);
 
 // track current sockets
 var sockets = new Sockets();
@@ -33,25 +36,6 @@ Sockets.prototype.add = function (username, socketid) {
     this.sockets.push(conn);
 }
 
-// Stream
-function Stream() {
-    this.socketid = uuid.v4();
-}
-
-Stream.prototype.listenAndServe = function () {
-    let nsp = io.of(this.socketid);
-    nsp.on('connection', function (socket) {
-        // stream
-        socket.on('emit', function (id, msg) {
-            socket.broadcast.emit('emit', msg);
-        });
-
-        socket.on('disconnect', function () {
-
-        });
-    });
-}
-
 // Connection
 function Connection(username, socketid) {
     this.username = username;
@@ -70,12 +54,11 @@ Connection.prototype.listenAndServe = function () {
             //TODO: Check contact
             let calleeSocketId = sockets.get(callee);
             if (callee) {
-                // serve a new stream
-                let stream = new Stream();
-                stream.listenAndServe();
+                // new stream
+                let streamId = uuid.v4();
                 // send to caller and callee
-                socket.broadcast.to(calleeSocketId).emit('notify', JSON.stringify({ from: this.username, socketid: stream.socketid }));
-                socket.broadcast.to(this.socketid).emit('notify', JSON.stringify({ from: callee, socketid: stream.socketid }));
+                socket.broadcast.to(calleeSocketId).emit('notify', JSON.stringify({ from: this.username, socketid: streamId }));
+                socket.broadcast.to(this.socketid).emit('notify', JSON.stringify({ from: callee, socketid: streamId }));
             }
         });
 

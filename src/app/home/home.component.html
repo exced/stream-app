@@ -22,7 +22,6 @@
                 <button (click)="add()" class="btn btn-primary">add</button>
                 <ul *ngFor="let contactname of contacts" class="nav">
                     <li><a href="#/contact/{{ contactname }}">{{ contactname }}</a></li>
-                    <button (click)="call()" class="btn btn-primary">call</button>
                     <li class="nav-divider"></li>
                 </ul>
             </div>
@@ -34,6 +33,9 @@
             <br>
             <br>
             <div class="jumbotron">
+                <!-- Call confirm modal -->
+                <app-confirm></app-confirm>
+                <!-- router outlet -->
                 <router-outlet></router-outlet>
             </div>
         </div>

@@ -81,4 +81,13 @@ export class AuthService {
         localStorage.removeItem(LOCAL_STORAGE_TOKEN);
     }
 
+    public addContact(username: string): Observable<boolean> {
+        var creds = "username=" + username;
+        return this.http.post(this.URL + '/contact', creds, { headers: this.headers() })
+            .map((response: Response) => {
+                let res = response.json();
+                return res && res.success;
+            });
+    }
+
 }

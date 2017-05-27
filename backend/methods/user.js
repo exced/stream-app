@@ -73,6 +73,31 @@ var functions = {
 
     addContact: function (req, res) {
 
+        if (!req.body.username) {
+            res.status(400).json({ success: false, msg: 'Bad request' });
+        }
+        else {
+            /* authenticated */
+            if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+                let token = req.headers.authorization.split(' ')[1];
+                let decodedtoken = jwt.decode(token, config.secret);
+
+                /* find */
+                User.find({ username: req.body.username }, function (err, users) {
+                    if (err) {
+                        console.error(err);
+                    }
+
+                    if (!err) {
+                        
+                        return res.json({ success: true, msg: 'contact successfully added' });
+                    }
+                    else {
+                        return res.json({ success: false, msg: 'No users found' });
+                    }
+                });
+            }
+        }
     },
 
 }
