@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
+import { AuthService } from './auth.service';
 import { AppSettingsService } from '../app/app.settings.service';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import * as io from 'socket.io-client';
-
-const LOCAL_STORAGE_SOCKET = 'StreamAppSocket';
 
 export interface Notification {
     from: string;
@@ -13,18 +12,46 @@ export interface Notification {
 @Injectable()
 export class SocketService {
 
-    private socket: any;
-    private socketId: string;
     private URL: string;
-    private username: any;
+    private socket: any;
+    private token: string;
 
-    constructor(private appSettingsService: AppSettingsService) {
+    constructor(private appSettingsService: AppSettingsService, private authService: AuthService) {
         this.URL = appSettingsService.URL;
+        this.socket = io(this.URL);
+        this.token = this.authService.getToken();
     }
 
-    public setSocketId(socketId: string) {
-        this.socketId = socketId;
-        localStorage.setItem(LOCAL_STORAGE_SOCKET, socketId);
+    ngOnInit() {
+        
+    }
+
+    /**
+     * User join event
+     */
+    public join(): Observable<string> {
+        return new Observable(observer => {
+            this.socket.on('join', (data) => {
+                observer.next(data);
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        })
+    }
+
+    /**
+    * User leave event
+    */
+    public leave(): Observable<string> {
+        return new Observable(observer => {
+            this.socket.on('leave', (data) => {
+                observer.next(data);
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        })
     }
 
     /**
@@ -33,20 +60,26 @@ export class SocketService {
      */
     public call(contactname: string): Observable<Notification> {
         return new Observable(observer => {
-            let socket = io(this.URL + '/' + this.socketId);
-            socket.emit('notify', contactname);
+            this.socket.emit('call', this.token, contactname);
+
+            this.socket.on('notify', (data) => {
+                let notification = <Notification>JSON.parse(data);
+                observer.next(notification);
+            });
             return () => {
-                socket.disconnect();
+                this.socket.disconnect();
             };
-        });
+        })
     }
 
     /**
      * Notify each time you receive a call from server
      */
-    public notify(): Observable<Notification> {
+    public subscribe(): Observable<Notification> {
+        console.log('subscribe ', this.token);
         return new Observable(observer => {
-            this.socket = io(this.URL + '/' + this.socketId);
+            this.socket.emit('subscribe', this.token);
+
             this.socket.on('notify', (data) => {
                 let notification = <Notification>JSON.parse(data);
                 observer.next(notification);

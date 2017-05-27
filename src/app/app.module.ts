@@ -16,7 +16,6 @@ import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { SigninComponent } from './signin/signin.component';
 import { StreamComponent } from './stream/stream.component';
-import { ContactComponent } from './contact/contact.component';
 import { ConfirmComponent } from './confirm/confirm.component';
 
 @NgModule({
@@ -26,7 +25,6 @@ import { ConfirmComponent } from './confirm/confirm.component';
     LoginComponent,
     SigninComponent,
     StreamComponent,
-    ContactComponent,
     ConfirmComponent,
   ],
   imports: [

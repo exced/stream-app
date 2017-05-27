@@ -19,9 +19,8 @@
                 <br>
                 <br>
                 <br>
-                <button (click)="add()" class="btn btn-primary">add</button>
-                <ul *ngFor="let contactname of contacts" class="nav">
-                    <li><a href="#/contact/{{ contactname }}">{{ contactname }}</a></li>
+                <ul *ngFor="let user of users" class="nav">
+                    <li><a href="#/user/{{ user }}">{{ user }}</a></li>
                     <li class="nav-divider"></li>
                 </ul>
             </div>

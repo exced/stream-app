@@ -26,7 +26,7 @@ export class StreamComponent implements OnInit {
         // route contactid subscription
         this.route.params
             .subscribe((params) => {
-                this.contactname = params['contactid'];
+                this.contactname = params['userid'];
             });
     }
 

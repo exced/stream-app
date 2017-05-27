@@ -13,7 +13,7 @@ import { ConfirmComponent } from '../confirm/confirm.component';
 })
 export class HomeComponent implements OnInit {
 
-    contacts = ["thomas1", "thomas2"];
+    users = [];
     notification: Notification; // id for call received notification
 
     constructor(
@@ -21,13 +21,25 @@ export class HomeComponent implements OnInit {
         private authService: AuthService,
         private socketService: SocketService,
         private confirmService: ConfirmService
-    ) { }
+    ) {
+
+    }
 
     ngOnInit() {
-        // subscribe connected contacts
-
+        // subscribe user join
+        this.socketService.join().subscribe(user => {
+            console.log('user join: ' + user);
+            this.users.push(user);
+        })
+        // subscribe user leave
+        this.socketService.leave().subscribe(user => {
+            let index = this.users.indexOf(user);
+            if (index > -1) {
+                this.users.splice(index, 1);
+            }
+        })
         // call subscription
-        this.socketService.notify().subscribe((notification: Notification) => {
+        this.socketService.subscribe().subscribe((notification: Notification) => {
             this.confirmService.activate('Confirm?')
                 .then(result => {
                     console.log(result);
@@ -36,10 +48,6 @@ export class HomeComponent implements OnInit {
                 });
             this.notification = notification;
         });
-    }
-
-    add() {
-        this.router.navigate(['/contact']);
     }
 
     logout() {

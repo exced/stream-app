@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response } from '@angular/http';
 import { AppSettingsService } from '../app/app.settings.service';
-import { SocketService } from './socket.service';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import 'rxjs/add/operator/map'
 
@@ -15,15 +14,11 @@ export class AuthService {
 
     constructor(
         private http: Http,
-        private appSettingsService: AppSettingsService,
-        private socketService: SocketService
+        private appSettingsService: AppSettingsService
     ) {
         this.URL = appSettingsService.URL;
         // set token if saved in local storage
-        var currentUser = JSON.parse(this.getToken());
-        if (currentUser) {
-            this.setToken(currentUser.token);
-        }
+        this.token = this.getToken();
     }
 
     public getToken(): string {
@@ -52,7 +47,6 @@ export class AuthService {
                 let token = res && res.token;
                 if (token) {
                     this.setToken(token);
-                    this.socketService.setSocketId(token);
                     return true;
                 } else {
                     return false;
@@ -68,7 +62,6 @@ export class AuthService {
                 let token = res && res.token;
                 if (token) {
                     this.setToken(token);
-                    this.socketService.setSocketId(token);
                     return true;
                 } else {
                     return false;
@@ -79,15 +72,6 @@ export class AuthService {
     public logout(): void {
         this.setToken(null);
         localStorage.removeItem(LOCAL_STORAGE_TOKEN);
-    }
-
-    public addContact(username: string): Observable<boolean> {
-        var creds = "username=" + username;
-        return this.http.post(this.URL + '/contact', creds, { headers: this.headers() })
-            .map((response: Response) => {
-                let res = response.json();
-                return res && res.success;
-            });
-    }
+    }  
 
 }

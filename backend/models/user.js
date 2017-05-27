@@ -12,10 +12,6 @@ var userSchema = new Schema({
         type: String,
         required: true
     },
-    contacts: {
-        type: Array(String),
-        required: false
-    },
 });
 
 

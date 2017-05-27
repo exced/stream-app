@@ -1,8 +1,3 @@
-let uuid = require('uuid'),
-    app = require('../app'),
-    http = require('http').Server(app),
-    io = require('socket.io')(http);
-
 // track current sockets
 var sockets = new Sockets();
 
@@ -13,10 +8,19 @@ function Sockets() {
     this.sockets = [];
 }
 
-Sockets.prototype.get = function (username) {
+Sockets.prototype.getToken = function (username) {
     for (var i = 0; i < this.sockets.length; i++) {
         if (username == this.sockets[i].username) {
-            return this.sockets[i].socket;
+            return this.sockets[i].socketid;
+        }
+    }
+    return null;
+}
+
+Sockets.prototype.getUsername = function (socketid) {
+    for (var i = 0; i < this.sockets.length; i++) {
+        if (socketid == this.sockets[i].socketid) {
+            return this.sockets[i].username;
         }
     }
     return null;
@@ -32,7 +36,6 @@ Sockets.prototype.remove = function (username) {
 
 Sockets.prototype.add = function (username, socketid) {
     let conn = new Connection(username, socketid);
-    conn.listenAndServe();
     this.sockets.push(conn);
 }
 
@@ -40,33 +43,6 @@ Sockets.prototype.add = function (username, socketid) {
 function Connection(username, socketid) {
     this.username = username;
     this.socketid = socketid;
-}
-
-/**
- * Listen on call from this and forward it to callee.
- */
-Connection.prototype.listenAndServe = function () {
-    let nsp = io.of(this.socketid);
-    nsp.on('connection', function (socket) {
-
-        // forward the call to the callee
-        socket.on('notify', function (id, callee) {
-            //TODO: Check contact
-            let calleeSocketId = sockets.get(callee);
-            if (callee) {
-                // new stream
-                let streamId = uuid.v4();
-                // send to caller and callee
-                socket.broadcast.to(calleeSocketId).emit('notify', JSON.stringify({ from: this.username, socketid: streamId }));
-                socket.broadcast.to(this.socketid).emit('notify', JSON.stringify({ from: callee, socketid: streamId }));
-            }
-        });
-
-        // remove connection from listening sockets
-        socket.on('disconnect', function () {
-            sockets.remove(this.username);
-        });
-    });
 }
 
 module.exports = sockets;

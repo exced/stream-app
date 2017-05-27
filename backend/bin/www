@@ -3,7 +3,6 @@
 /**
  * Module dependencies.
  */
-
 var app = require('../app');
 var debug = require('debug')('Server:server');
 var http = require('http');
@@ -11,20 +10,58 @@ var http = require('http');
 /**
  * Get port from environment and store in Express.
  */
-
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-
 var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+var sockets = require('../methods/sockets');
+
+io.on('connection', function (socket) {
+    console.log('a user connected');
+    console.log('sockets ');
+    console.log(sockets);
+
+    socket.on('subscribe', function (token) {
+        let username = sockets.getUsername(token);
+        if (username) {
+            console.log('joining room', username);
+            socket.join(token);
+            socket.broadcast.emit('join', username);
+        }
+    });
+
+    // forward the call to the callee
+    socket.on('call', function (token, callee) {
+        let caller = sockets.getUsername(token);
+        if (caller) {
+            // get callee id
+            let calleeSocketId = sockets.getToken(callee);
+            if (calleeSocketId) {
+                console.log('call by ', caller, ' to ', callee);
+                // new stream
+                let streamid = uuid.v4();
+                // send streamId to caller and callee
+                socket.broadcast.to(calleeSocketId).emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+                socket.emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+            }
+        }
+    });
+
+    // remove connection from listening sockets
+    socket.on('disconnect', function () {
+
+    });
+});
 
 /**
  * Listen on provided port, on all network interfaces.
  */
-
+console.log('server listening on port ' + port);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
@@ -32,59 +69,56 @@ server.on('listening', onListening);
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+    var port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 }
 
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
 }

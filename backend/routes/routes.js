@@ -6,6 +6,4 @@ let router = express.Router();
 router.post('/login', user.login);
 router.post('/signin', user.signin);
 
-router.post('/contacts/', user.addContact);
-
 module.exports = router;
