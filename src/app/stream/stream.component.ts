@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ViewChildren } from '@angular/core';
 import { SocketService } from '../../services/socket.service';
+import { Notification } from '../../services/socket.service';
 
 @Component({
     selector: 'app-stream',
@@ -10,14 +11,21 @@ export class StreamComponent implements OnInit {
 
     @ViewChild('video') videoRef: any;
 
-    constructor() {
-        
+    showDialog: boolean = false;
+    notification: Notification;
+
+    constructor(private socketService: SocketService) {
+
     }
 
     ngOnInit() {
+        this.socketService.notify().subscribe((notification: Notification) => {
+            this.showDialog = true;
+            this.notification = notification;
+        });
     }
 
-    call() {
+    play() {
         let video = this.videoRef.nativeElement;
         let n = <any>navigator;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);

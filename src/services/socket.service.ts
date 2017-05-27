@@ -7,7 +7,7 @@ const LOCAL_STORAGE_SOCKET = 'StreamAppSocket';
 
 export interface Notification {
     from: string;
-    onAddress: string;
+    socketid: string;
 }
 
 @Injectable()
@@ -27,41 +27,28 @@ export class SocketService {
         localStorage.setItem(LOCAL_STORAGE_SOCKET, socketId);
     }
 
-    public emit(message: string): void {
-        this.socket.emit('emit', message);
+    public emit(socketId: string, message: string): void {
+        let socket = io(this.URL + '/' + socketId);
+        socket.emit('emit', message);
     }
 
-    public accept(notification: Notification): Observable<string> {
-        this.socket.emit('accept', notification);
+    public on(socketId: string): Observable<string> {
         return new Observable(observer => {
-            this.socket = io(this.URL + '/' + notification.onAddress);
-            this.socket.on('emit', (data) => {
+            let socket = io(this.URL + '/' + socketId);
+            socket.on('emit', (data) => {
                 observer.next(data);
             });
             return () => {
-                this.socket.disconnect();
+                socket.disconnect();
             };
-        })
+        });
     }
 
-    public notify(username: string): Observable<string> {
-        this.socket.emit('notify', username);
-        return new Observable(observer => {
-            this.socket = io(this.URL + '/' + this.socketId);
-            this.socket.on('emit', (data) => {
-                observer.next(data);
-            });
-            return () => {
-                this.socket.disconnect();
-            };
-        })
-    }    
-
-    public onNotify(): Observable<Notification> {
+    public notify(): Observable<Notification> {
         return new Observable(observer => {
             this.socket = io(this.URL + '/' + this.socketId);
             this.socket.on('notify', (data) => {
-                let notification = <Notification>data;
+                let notification = <Notification>JSON.parse(data);
                 observer.next(notification);
             });
             return () => {

@@ -17,6 +17,22 @@ export class HomeComponent implements OnInit {
     // subscribe connected contacts
   }
 
+  /**
+   * add contact
+   */
+  add() {
+    this.authService.addContact() {
+      
+    }
+  }
+
+  /**
+   * call contact
+   */
+  call() {
+
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

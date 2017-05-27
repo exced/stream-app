@@ -1,4 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
@@ -14,7 +15,7 @@ import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { SigninComponent } from './signin/signin.component';
 import { StreamComponent } from './stream/stream.component';
-import { ContactComponent } from './contact/contact.component';
+import { DialogComponent } from './dialog/dialog.component';
 
 @NgModule({
   declarations: [
@@ -23,10 +24,11 @@ import { ContactComponent } from './contact/contact.component';
     LoginComponent,
     SigninComponent,
     StreamComponent,
-    ContactComponent,
+    DialogComponent,
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     FormsModule,
     HttpModule,
     AppRoutingModule,
