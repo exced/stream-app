@@ -22,6 +22,9 @@ app.use(bodyParser.json({ limit: '30mb' }));
 app.use(routes);
 /* let Express know where the passport config for user authentication is */
 app.use(passport.initialize());
+app.use(passport.authenticate("jwt", {
+    session: true
+}));
 require('./config/passport')(passport);
 
 module.exports = app;

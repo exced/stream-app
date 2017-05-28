@@ -23,7 +23,23 @@ export class SocketService {
     }
 
     ngOnInit() {
-        
+
+    }
+
+    /**
+     * Get current users
+     */
+    public users(): Observable<[string]> {
+        return new Observable(observer => {
+            this.socket.emit('users', this.token);
+
+            this.socket.on('users', (data) => {
+                observer.next(JSON.parse(data));
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        })
     }
 
     /**

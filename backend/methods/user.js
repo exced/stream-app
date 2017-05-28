@@ -1,6 +1,5 @@
 let User = require('../models/user'),
     config = require('../config/database'),
-    sockets = require('./sockets'),
     jwt = require('jwt-simple'),
     uuid = require('uuid');
 
@@ -22,7 +21,6 @@ var functions = {
                     user.comparePassword(req.body.password, function (err, isMatch) {
                         if (isMatch && !err) {
                             let token = jwt.encode(user, config.secret);
-                            sockets.add(req.body.username, uuid.v4());
                             res.status(200).json({ success: true, token: token });
                         } else {
                             return res.status(403).send({ success: false, msg: 'Authenticaton failed, wrong password.' });
@@ -42,6 +40,7 @@ var functions = {
             let newUser = User({
                 username: req.body.username,
                 password: req.body.password,
+                subscribed: false,
             });
             /* save */
             newUser.save(function (err, newUser) {
@@ -53,7 +52,6 @@ var functions = {
                 }
                 else {
                     let token = jwt.encode(newUser, config.secret);
-                    sockets.add(req.body.username, uuid.v4());
                     res.status(200).json({ success: true, token: token });
                 }
             })

@@ -26,9 +26,14 @@ export class HomeComponent implements OnInit {
     }
 
     ngOnInit() {
+        // subscribe users
+        this.socketService.users().subscribe(users => {
+            console.log('USERS');
+            console.log(users);
+            this.users = users;
+        })
         // subscribe user join
         this.socketService.join().subscribe(user => {
-            console.log('user join: ' + user);
             this.users.push(user);
         })
         // subscribe user leave

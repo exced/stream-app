@@ -19,37 +19,89 @@ app.set('port', port);
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
-var sockets = require('../methods/sockets');
+let jwt = require('jwt-simple');
+let config = require('../config/database');
+let User = require('../models/user');
 
 io.on('connection', function (socket) {
-    console.log('a user connected');
-    console.log('sockets ');
-    console.log(sockets);
 
+    // user subscription
     socket.on('subscribe', function (token) {
-        let username = sockets.getUsername(token);
-        if (username) {
-            console.log('joining room', username);
-            socket.join(token);
-            socket.broadcast.emit('join', username);
-        }
+        console.log('subscribe event');
+        let decodedtoken = jwt.decode(token, config.secret);
+        let username = decodedtoken.username;
+        User.findOne({ username: username }, function (err, user) {
+            if (err) {
+                console.error(err);
+            };
+            if (user) {
+                // update
+                user.subscribed = true;
+                user.save(function (err_, user_) {
+                    if (err_) {
+                        console.error(err_)
+                    }
+                    if (user_) {
+                        console.log('joining room', username);
+                        socket.join(user._id);
+                        socket.broadcast.emit('join', username);
+                    }
+                })
+            }
+        })
+    });
+
+    // user ask for current users
+    socket.on('users', function (token) {
+        console.log('users event');
+        console.log(token);
+        let decodedtoken = jwt.decode(token, config.secret);
+        let username = decodedtoken.username;
+        User.findOne({ username: username }, function (err, user) {
+            if (err) {
+                console.error(err);
+            };
+            if (user) {
+                console.log('users event emit');
+                User.find({ subscribed: true }, { username: true, password: false }, function (err_, users) {
+                    if (err_) {
+                        console.error(err);
+                    }
+                    if (users) {
+                        socket.emit('users', users);
+                    }
+                })
+            }
+        })
     });
 
     // forward the call to the callee
     socket.on('call', function (token, callee) {
-        let caller = sockets.getUsername(token);
-        if (caller) {
-            // get callee id
-            let calleeSocketId = sockets.getToken(callee);
-            if (calleeSocketId) {
-                console.log('call by ', caller, ' to ', callee);
-                // new stream
-                let streamid = uuid.v4();
-                // send streamId to caller and callee
-                socket.broadcast.to(calleeSocketId).emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
-                socket.emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+        console.log('call event');
+        // caller exists + name
+        let decodedtoken = jwt.decode(token, config.secret);
+        let caller = decodedtoken.username;
+        User.findOne({ username: caller }, function (err, user) {
+            if (err) {
+                console.error(err);
+            };
+            if (user) {
+                // get callee socket id
+                User.findOne({ username: callee }, function (err_, user_) {
+                    if (err_) {
+                        console.error(err_)
+                    }
+                    if (user_) {
+                        console.log('call by ', caller, ' to ', callee);
+                        // new stream
+                        let streamid = uuid.v4();
+                        // send streamId to caller and callee
+                        socket.broadcast.to(user_._id).emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+                        socket.emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+                    }
+                })
             }
-        }
+        })
     });
 
     // remove connection from listening sockets
