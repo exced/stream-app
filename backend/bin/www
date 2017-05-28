@@ -22,6 +22,7 @@ var io = require('socket.io')(server);
 let jwt = require('jwt-simple');
 let config = require('../config/database');
 let User = require('../models/user');
+let uuid = require('uuid');
 
 io.on('connection', function (socket) {
 
@@ -54,7 +55,6 @@ io.on('connection', function (socket) {
     // user ask for current users
     socket.on('users', function (token) {
         console.log('users event');
-        console.log(token);
         let decodedtoken = jwt.decode(token, config.secret);
         let username = decodedtoken.username;
         User.findOne({ username: username }, function (err, user) {
@@ -62,12 +62,17 @@ io.on('connection', function (socket) {
                 console.error(err);
             };
             if (user) {
-                console.log('users event emit');
-                User.find({ subscribed: true }, { username: true, password: false }, function (err_, users) {
+                console.log('users event, found ', username);
+                User.find({ username: { $ne: username }, subscribed: true }, { username: true, _id: false }, function (err_, users) {
                     if (err_) {
                         console.error(err);
                     }
                     if (users) {
+                        users = users.reduce(function (a, b) {
+                            return a.concat(b.username)
+                        }, []);
+                        console.log('users event emit');
+                        console.log(users);
                         socket.emit('users', users);
                     }
                 })
@@ -96,13 +101,20 @@ io.on('connection', function (socket) {
                         // new stream
                         let streamid = uuid.v4();
                         // send streamId to caller and callee
-                        socket.broadcast.to(user_._id).emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
+                        socket.broadcast.to(user_._id).emit('call', JSON.stringify({ from: caller, socketid: streamid }));
                         socket.emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
                     }
                 })
             }
         })
     });
+
+    // forward data stream
+    socket.on('send', function (socketid, data) {
+        console.log('FORWARD data');
+        socket.broadcast.to(socketid).emit('receive', data);
+    });
+
 
     // remove connection from listening sockets
     socket.on('disconnect', function () {

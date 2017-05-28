@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { AuthService } from './auth.service';
 import { AppSettingsService } from '../app/app.settings.service';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import * as io from 'socket.io-client';
+import * as Socketiop2p from 'socket.io-p2p';
 
 export interface Notification {
     from: string;
@@ -14,27 +14,23 @@ export class SocketService {
 
     private URL: string;
     private socket: any;
-    private token: string;
 
-    constructor(private appSettingsService: AppSettingsService, private authService: AuthService) {
+    constructor(private appSettingsService: AppSettingsService) {
         this.URL = appSettingsService.URL;
         this.socket = io(this.URL);
-        this.token = this.authService.getToken();
-    }
-
-    ngOnInit() {
-
     }
 
     /**
      * Get current users
      */
-    public users(): Observable<[string]> {
+    public users(token: string): Observable<[string]> {
         return new Observable(observer => {
-            this.socket.emit('users', this.token);
+            this.socket.emit('users', token);
 
             this.socket.on('users', (data) => {
-                observer.next(JSON.parse(data));
+                console.log('USERS ');
+                console.log(data);
+                observer.next(data);
             });
             return () => {
                 this.socket.disconnect();
@@ -74,9 +70,9 @@ export class SocketService {
      * Send a call to a contact
      * @param contactname 
      */
-    public call(contactname: string): Observable<Notification> {
+    public call(token: string, contactname: string): Observable<Notification> {
         return new Observable(observer => {
-            this.socket.emit('call', this.token, contactname);
+            this.socket.emit('call', token, contactname);
 
             this.socket.on('notify', (data) => {
                 let notification = <Notification>JSON.parse(data);
@@ -91,14 +87,31 @@ export class SocketService {
     /**
      * Notify each time you receive a call from server
      */
-    public subscribe(): Observable<Notification> {
-        console.log('subscribe ', this.token);
+    public subscribe(token: string): Observable<Notification> {
+        console.log('subscribe ', token);
         return new Observable(observer => {
-            this.socket.emit('subscribe', this.token);
+            this.socket.emit('subscribe', token);
 
-            this.socket.on('notify', (data) => {
+            this.socket.on('call', (data) => {
+                console.log('SUBSCRIBE CALL ');
+                console.log(data);
                 let notification = <Notification>JSON.parse(data);
                 observer.next(notification);
+            });
+            return () => {
+                this.socket.disconnect();
+            };
+        })
+    }
+
+    public send(socketid: string, data: any): void {
+        this.socket.emit('send', socketid, data);
+    }
+
+    public receive(socketid: string): Observable<any> {
+        return new Observable(observer => {
+            this.socket.on('receive', (data) => {
+                observer.next(data);
             });
             return () => {
                 this.socket.disconnect();

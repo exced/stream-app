@@ -18,11 +18,12 @@ export class AuthService {
     ) {
         this.URL = appSettingsService.URL;
         // set token if saved in local storage
-        this.token = this.getToken();
+        //DEBUG this.token = this.getToken();
     }
 
     public getToken(): string {
-        return localStorage.getItem(LOCAL_STORAGE_TOKEN);
+        //DEBUG return localStorage.getItem(LOCAL_STORAGE_TOKEN);
+        return this.token;
     }
 
     private setToken(token: string) {
