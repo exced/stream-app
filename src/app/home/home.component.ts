@@ -27,12 +27,14 @@ export class HomeComponent implements OnInit {
 
     ngOnInit() {
         // call subscription
-        this.socketService.subscribe(this.token).subscribe((notification: Notification) => {
+        this.socketService.subscribe().subscribe((notification: Notification) => {
             this.confirmService.activate('Confirm?')
                 .then(result => {
                     if (result) {
                         // accept
-                        this.router.navigate(['/peer/' + notification.peerid]);
+                        let confirm = { confirmed: true, peerid: notification.peerid };
+                        this.confirmService.setConfirm(confirm);
+                        this.router.navigate(['/user/' + notification.from]);
                     } else {
                         // hangup
                     }

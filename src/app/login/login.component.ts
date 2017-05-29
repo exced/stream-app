@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SocketService } from '../../services/socket.service';
+import { AppSettingsService } from '../app.settings.service';
 
 @Component({
     selector: 'app-login',
@@ -15,7 +16,11 @@ export class LoginComponent implements OnInit {
 
     constructor(
         private router: Router,
-        private socketService: SocketService) { }
+        private socketService: SocketService,
+        private appSettingsService: AppSettingsService,
+    ) {
+
+    }
 
     ngOnInit() {
 
@@ -25,7 +30,8 @@ export class LoginComponent implements OnInit {
         this.loading = true;
         this.socketService.login(this.model.username)
             .subscribe(result => {
-                if (result.success) {
+                if (result) {
+                    this.appSettingsService.setUsername(this.model.username);
                     this.router.navigate(['/']);
                 } else {
                     this.error = 'Username incorrect';

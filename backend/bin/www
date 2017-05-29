@@ -29,24 +29,25 @@ var io = require('socket.io')(server);
 var users = {};
 
 io.on('connection', function (socket) {
-    console.log('connection');
 
     // connect
     socket.on('login', function (username, peerid) {
         if (users[username]) {
-            socket.emit('login', { success: false, msg: 'username already used' });
+            socket.emit('login', false);
         } else {
             users[username] = { socket: socket, peerid: peerid };
-            socket.emit('login', { success: true, msg: 'successfully connected' });
+            socket.emit('login', true);
             socket.broadcast.emit('join', username);
         }
     });
 
     // call
     socket.on('call', function (caller, callee) {
-        let calleeSocket = users[callee].socket;
-        let callerPeerid = users[caller].peerid;
-        socket.broadcast.to(calleeSocket).emit('call', { from: caller, peerid: callerPeerid });
+        let calleeSocketid = users[callee] && users[callee].socket && users[callee].socket.id;
+        let callerPeerid = users[caller] && users[caller].peerid;
+        if (calleeSocketid && callerPeerid) {
+            socket.broadcast.to(calleeSocketid).emit('notify', caller, callerPeerid);
+        }
     })
 
     // ask for other users
@@ -58,7 +59,6 @@ io.on('connection', function (socket) {
 
     // remove connection from listening sockets
     socket.on('disconnect', function () {
-        console.log('disconnect');
         let username = nameBySocket(users, socket);
         if (username) {
             delete users[username];

@@ -45,6 +45,7 @@ export class StreamComponent implements OnInit {
                 this.userid = params['userid'];
                 // call answer
                 if (this.confirm.confirmed) {
+                    this.remotePeerid = this.confirm.peerid;
                     this.receive();
                 }
             });
@@ -55,15 +56,11 @@ export class StreamComponent implements OnInit {
         let n = <any>navigator;
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
-        this.peer.on('call', function (call) {
-            n.getUserMedia({ video: true, audio: true }, function (stream) {
-                call.answer(stream);
-                call.on('stream', function (remotestream) {
-                    video.srcObject = remotestream;
-                    video.play();
-                })
-            }, function (err) {
-                console.log('Failed to get stream', err);
+        n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            let call = self.peer.call(self.remotePeerid, stream);
+            call.on('stream', function (remotestream) {
+                video.srcObject = remotestream;
+                video.play();
             })
         })
     }
@@ -76,24 +73,19 @@ export class StreamComponent implements OnInit {
     }
 
     call() {
-        this.socketService.call().subscribe(accepted => {
-            if (accepted) {
-                let video = this.localVideoRef.nativeElement;
-                let n = <any>navigator;
-                let self = this;
-                n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
-                n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
-                    let call = self.peer.call(self.remotePeerid, stream);
-                    call.on('stream', function (remotestream) {
-                        video.srcObject = remotestream;
-                        video.play();
-                    })
-                }, function (err) {
-                    console.log('Failed to get stream', err);
+        this.socketService.call(this.userid);
+        let video = this.localVideoRef.nativeElement;
+        let n = <any>navigator;
+        let self = this;
+        n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
+        this.peer.on('call', function (call) {
+            n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+                call.answer(stream);
+                call.on('stream', function (remotestream) {
+                    video.srcObject = remotestream;
+                    video.play();
                 })
-            } else {
-                console.log('call refused');
-            }
+            })
         })
     }
 

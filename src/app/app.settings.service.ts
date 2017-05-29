@@ -7,6 +7,7 @@ export class AppSettingsService {
 
     URL: string = 'http://localhost:3000';
     peer: any;
+    username: string;
 
     constructor() {
         this.peer = new Peer({
@@ -24,5 +25,9 @@ export class AppSettingsService {
                 ]
             }
         });
+    }
+
+    public setUsername(username: string): void {
+        this.username = username;
     }
 }

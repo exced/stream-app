@@ -67,31 +67,17 @@ export class SocketService {
      * Send a call to a contact
      * @param contactname 
      */
-    public call(token: string, contactname: string): Observable<Notification> {
-        return new Observable(observer => {
-            this.socket.emit('call', token, contactname);
-
-            this.socket.on('notify', (data) => {
-                let notification = <Notification>JSON.parse(data);
-                observer.next(notification);
-            });
-            return () => {
-                this.socket.disconnect();
-            };
-        })
+    public call(callee: string): void {
+        this.socket.emit('call', this.appSettingsService.username, callee);
     }
 
     /**
      * Notify each time you receive a call from server
      */
-    public subscribe(token: string): Observable<Notification> {
-        console.log('subscribe ', token);
+    public subscribe(): Observable<Notification> {
         return new Observable(observer => {
-            this.socket.emit('subscribe', token);
-
-            this.socket.on('call', (data) => {
-                let notification = <Notification>JSON.parse(data);
-                observer.next(notification);
+            this.socket.on('notify', (data) => {
+                observer.next(data);
             });
             return () => {
                 this.socket.disconnect();
