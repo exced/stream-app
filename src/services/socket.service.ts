@@ -2,11 +2,10 @@ import { Injectable } from '@angular/core';
 import { AppSettingsService } from '../app/app.settings.service';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import * as io from 'socket.io-client';
-import * as Socketiop2p from 'socket.io-p2p';
 
 export interface Notification {
     from: string;
-    socketid: string;
+    peerid: string;
 }
 
 @Injectable()
@@ -25,11 +24,9 @@ export class SocketService {
      */
     public users(token: string): Observable<[string]> {
         return new Observable(observer => {
-            this.socket.emit('users', token);
+            this.socket.emit('users');
 
             this.socket.on('users', (data) => {
-                console.log('USERS ');
-                console.log(data);
                 observer.next(data);
             });
             return () => {
@@ -93,8 +90,6 @@ export class SocketService {
             this.socket.emit('subscribe', token);
 
             this.socket.on('call', (data) => {
-                console.log('SUBSCRIBE CALL ');
-                console.log(data);
                 let notification = <Notification>JSON.parse(data);
                 observer.next(notification);
             });
@@ -104,13 +99,16 @@ export class SocketService {
         })
     }
 
-    public send(socketid: string, data: any): void {
-        this.socket.emit('send', socketid, data);
-    }
-
-    public receive(socketid: string): Observable<any> {
+    /**
+     * Connect with username and peer id
+     * @param username 
+     */
+    public login(username: string): Observable<any> {
         return new Observable(observer => {
-            this.socket.on('receive', (data) => {
+            let peerid = this.appSettingsService.peer.id;
+            this.socket.emit('login', username, peerid);
+
+            this.socket.on('login', (data) => {
                 observer.next(data);
             });
             return () => {

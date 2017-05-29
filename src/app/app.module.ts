@@ -6,7 +6,6 @@ import { HttpModule } from '@angular/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AuthGuard } from '../guards/auth.guard';
-import { AuthService } from '../services/auth.service';
 import { SocketService } from '../services/socket.service';
 import { ConfirmService } from '../services/confirm.service';
 import { AppSettingsService } from './app.settings.service';
@@ -14,7 +13,6 @@ import { AppSettingsService } from './app.settings.service';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
-import { SigninComponent } from './signin/signin.component';
 import { StreamComponent } from './stream/stream.component';
 import { ConfirmComponent } from './confirm/confirm.component';
 
@@ -23,7 +21,6 @@ import { ConfirmComponent } from './confirm/confirm.component';
     AppComponent,
     HomeComponent,
     LoginComponent,
-    SigninComponent,
     StreamComponent,
     ConfirmComponent,
   ],
@@ -36,7 +33,6 @@ import { ConfirmComponent } from './confirm/confirm.component';
   ],
   providers: [
     AuthGuard,
-    AuthService,
     SocketService,
     ConfirmService,
     AppSettingsService,

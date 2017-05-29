@@ -3,7 +3,7 @@ import { Subject, Observable, BehaviorSubject } from 'rxjs';
 
 export interface Confirm {
     confirmed: boolean;
-    socketid: string;
+    peerid: string;
 }
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ConfirmService {
     confirm: BehaviorSubject<Confirm>;
 
     constructor() {
-        this.confirm = new BehaviorSubject({ confirmed: false, socketid: '' });
+        this.confirm = new BehaviorSubject({ confirmed: false, peerid: '' });
     }
 
     public activate: (message?: string, title?: string) => Promise<boolean>;

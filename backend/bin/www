@@ -3,15 +3,21 @@
 /**
  * Module dependencies.
  */
-var app = require('../app');
 var debug = require('debug')('Server:server');
 var http = require('http');
+var express = require('express');
+var app = express();
 
 /**
  * Get port from environment and store in Express.
  */
 var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+
+/**
+ * PeerJS server
+ */
+var PeerServer = require('peer').PeerServer;
+var server = PeerServer({ port: 9000, path: '/peerjs' });
 
 /**
  * Create HTTP server.
@@ -19,108 +25,63 @@ app.set('port', port);
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
-let jwt = require('jwt-simple');
-let config = require('../config/database');
-let User = require('../models/user');
-let uuid = require('uuid');
+// map: username - {socket: string, peerid: string}
+var users = {};
 
 io.on('connection', function (socket) {
+    console.log('connection');
 
-    // user subscription
-    socket.on('subscribe', function (token) {
-        console.log('subscribe event');
-        let decodedtoken = jwt.decode(token, config.secret);
-        let username = decodedtoken.username;
-        User.findOne({ username: username }, function (err, user) {
-            if (err) {
-                console.error(err);
-            };
-            if (user) {
-                // update
-                user.subscribed = true;
-                user.save(function (err_, user_) {
-                    if (err_) {
-                        console.error(err_)
-                    }
-                    if (user_) {
-                        console.log('joining room', username);
-                        socket.join(user._id);
-                        socket.broadcast.emit('join', username);
-                    }
-                })
-            }
-        })
+    // connect
+    socket.on('login', function (username, peerid) {
+        if (users[username]) {
+            socket.emit('login', { success: false, msg: 'username already used' });
+        } else {
+            users[username] = { socket: socket, peerid: peerid };
+            socket.emit('login', { success: true, msg: 'successfully connected' });
+            socket.broadcast.emit('join', username);
+        }
     });
 
-    // user ask for current users
-    socket.on('users', function (token) {
-        console.log('users event');
-        let decodedtoken = jwt.decode(token, config.secret);
-        let username = decodedtoken.username;
-        User.findOne({ username: username }, function (err, user) {
-            if (err) {
-                console.error(err);
-            };
-            if (user) {
-                console.log('users event, found ', username);
-                User.find({ username: { $ne: username }, subscribed: true }, { username: true, _id: false }, function (err_, users) {
-                    if (err_) {
-                        console.error(err);
-                    }
-                    if (users) {
-                        users = users.reduce(function (a, b) {
-                            return a.concat(b.username)
-                        }, []);
-                        console.log('users event emit');
-                        console.log(users);
-                        socket.emit('users', users);
-                    }
-                })
-            }
-        })
-    });
+    // call
+    socket.on('call', function (caller, callee) {
+        let calleeSocket = users[callee].socket;
+        let callerPeerid = users[caller].peerid;
+        socket.broadcast.to(calleeSocket).emit('call', { from: caller, peerid: callerPeerid });
+    })
 
-    // forward the call to the callee
-    socket.on('call', function (token, callee) {
-        console.log('call event');
-        // caller exists + name
-        let decodedtoken = jwt.decode(token, config.secret);
-        let caller = decodedtoken.username;
-        User.findOne({ username: caller }, function (err, user) {
-            if (err) {
-                console.error(err);
-            };
-            if (user) {
-                // get callee socket id
-                User.findOne({ username: callee }, function (err_, user_) {
-                    if (err_) {
-                        console.error(err_)
-                    }
-                    if (user_) {
-                        console.log('call by ', caller, ' to ', callee);
-                        // new stream
-                        let streamid = uuid.v4();
-                        // send streamId to caller and callee
-                        socket.broadcast.to(user_._id).emit('call', JSON.stringify({ from: caller, socketid: streamid }));
-                        socket.emit('notify', JSON.stringify({ from: caller, socketid: streamid }));
-                    }
-                })
-            }
-        })
-    });
-
-    // forward data stream
-    socket.on('send', function (socketid, data) {
-        console.log('FORWARD data');
-        socket.broadcast.to(socketid).emit('receive', data);
-    });
-
+    // ask for other users
+    socket.on('users', function (username) {
+        var others = Object.keys(users);
+        others.splice(others.indexOf(username), 1);
+        socket.emit('users', others);
+    })
 
     // remove connection from listening sockets
     socket.on('disconnect', function () {
-
+        console.log('disconnect');
+        let username = nameBySocket(users, socket);
+        if (username) {
+            delete users[username];
+            socket.broadcast.emit('leave', username);
+        }
     });
 });
+
+/**
+ * Retrieves key of value
+ * @param object 
+ * @param value 
+ */
+function nameBySocket(users, socket) {
+    for (var username in users) {
+        if (users.hasOwnProperty(username)) {
+            if (users[username].socket === socket) {
+                return username;
+            }
+        }
+    }
+    return null;
+}
 
 /**
  * Listen on provided port, on all network interfaces.

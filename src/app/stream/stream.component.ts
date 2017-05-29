@@ -1,10 +1,12 @@
 import { Component, OnInit, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { SocketService } from '../../services/socket.service';
-import { AuthService } from '../../services/auth.service';
 import { Notification } from '../../services/socket.service';
 import { ConfirmService } from '../../services/confirm.service';
 import { Confirm } from '../../services/confirm.service';
+import { AppSettingsService } from '../app.settings.service';
+
+declare var Peer: any;
 
 @Component({
     selector: 'app-stream',
@@ -13,17 +15,23 @@ import { Confirm } from '../../services/confirm.service';
 })
 export class StreamComponent implements OnInit {
 
-    @ViewChild('video') videoRef: any;
+    @ViewChild('remoteVideo') remoteVideoRef: any;
+    @ViewChild('localVideo') localVideoRef: any;
 
-    contactname: string;
-    token: string;
     confirm: Confirm;
+    socketid: string;
+    peer: any;
+    remotePeerid: any;
+    userid: string = '';
 
-    constructor(private socketService: SocketService,
+    constructor(
+        private appSettingsService: AppSettingsService,
+        private socketService: SocketService,
         private route: ActivatedRoute,
-        private authService: AuthService,
         private confirmService: ConfirmService,
     ) {
+        // local peer
+        this.peer = appSettingsService.peer;
         // call confirm subscription
         confirmService.getConfirm().subscribe(confirm => {
             this.confirm = confirm;
@@ -31,51 +39,66 @@ export class StreamComponent implements OnInit {
     }
 
     ngOnInit() {
-        // token
-        this.token = this.authService.getToken();
-        // route contactid subscription
+        // route peerid subscription
         this.route.params
             .subscribe((params) => {
-                this.contactname = params['userid'];
+                this.userid = params['userid'];
                 // call answer
                 if (this.confirm.confirmed) {
-                    this.receive(this.confirm.socketid);
+                    this.receive();
                 }
             });
     }
 
-    call() {
-        // server subscription to receive valid id to stream
-        this.socketService.call(this.token, this.contactname).subscribe((notification: Notification) => {
-            this.send(notification.socketid);
-        })
-    }
-
-    receive(socketid: string) {
-        console.log('RECEIVE');
-        let video = this.videoRef.nativeElement;
-        this.socketService.receive(socketid).subscribe((data) => {
-            video.src = URL.createObjectURL(data);
-            video.play();
-        })
-    }
-
-    send(socketid: string) {
-        console.log('SEND');
-        // video streaming
-        let video = this.videoRef.nativeElement;
+    receive() {
+        let video = this.remoteVideoRef.nativeElement;
         let n = <any>navigator;
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
-        n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
-            self.socketService.send(socketid, stream);
+        this.peer.on('call', function (call) {
+            n.getUserMedia({ video: true, audio: true }, function (stream) {
+                call.answer(stream);
+                call.on('stream', function (remotestream) {
+                    video.srcObject = remotestream;
+                    video.play();
+                })
+            }, function (err) {
+                console.log('Failed to get stream', err);
+            })
+        })
+    }
+
+    connect() {
+        let conn = this.peer.connect(this.remotePeerid);
+        conn.on('open', function () {
+            conn.send('Message from that id');
         });
     }
 
+    call() {
+        this.socketService.call().subscribe(accepted => {
+            if (accepted) {
+                let video = this.localVideoRef.nativeElement;
+                let n = <any>navigator;
+                let self = this;
+                n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
+                n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+                    let call = self.peer.call(self.remotePeerid, stream);
+                    call.on('stream', function (remotestream) {
+                        video.srcObject = remotestream;
+                        video.play();
+                    })
+                }, function (err) {
+                    console.log('Failed to get stream', err);
+                })
+            } else {
+                console.log('call refused');
+            }
+        })
+    }
+
     stop() {
-        let video = this.videoRef.nativeElement;
-        let n = <any>navigator;
-        n.mediaDevices.stop();
+
     }
 
 }
