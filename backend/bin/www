@@ -33,10 +33,10 @@ io.on('connection', function (socket) {
     // connect
     socket.on('login', function (username, peerid) {
         if (users[username]) {
-            socket.emit('login', false);
+            socket.emit('login', { success: false, msg: 'username already in use' });
         } else {
             users[username] = { socket: socket, peerid: peerid };
-            socket.emit('login', true);
+            socket.emit('login', { success: true, msg: 'successfully logged in' });
             socket.broadcast.emit('join', username);
         }
     });
@@ -46,7 +46,7 @@ io.on('connection', function (socket) {
         let calleeSocketid = users[callee] && users[callee].socket && users[callee].socket.id;
         let callerPeerid = users[caller] && users[caller].peerid;
         if (calleeSocketid && callerPeerid) {
-            socket.broadcast.to(calleeSocketid).emit('notify', caller, callerPeerid);
+            socket.broadcast.to(calleeSocketid).emit('notify', { from: caller, peerid: callerPeerid });
         }
     })
 

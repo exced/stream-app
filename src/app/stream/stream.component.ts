@@ -52,15 +52,18 @@ export class StreamComponent implements OnInit {
     }
 
     receive() {
-        let video = this.remoteVideoRef.nativeElement;
+        let remoteVideo = this.remoteVideoRef.nativeElement;
+        let localVideo = this.localVideoRef.nativeElement;
         let n = <any>navigator;
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
         n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            localVideo.srcObject = stream;
+            localVideo.play();
             let call = self.peer.call(self.remotePeerid, stream);
             call.on('stream', function (remotestream) {
-                video.srcObject = remotestream;
-                video.play();
+                remoteVideo.srcObject = remotestream;
+                remoteVideo.play();
             })
         })
     }
@@ -74,16 +77,19 @@ export class StreamComponent implements OnInit {
 
     call() {
         this.socketService.call(this.userid);
-        let video = this.localVideoRef.nativeElement;
+        let remoteVideo = this.remoteVideoRef.nativeElement;
+        let localVideo = this.localVideoRef.nativeElement;
         let n = <any>navigator;
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
-        this.peer.on('call', function (call) {
-            n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+        n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            localVideo.srcObject = stream;
+            localVideo.play();
+            self.peer.on('call', function (call) {
                 call.answer(stream);
                 call.on('stream', function (remotestream) {
-                    video.srcObject = remotestream;
-                    video.play();
+                    remoteVideo.srcObject = remotestream;
+                    remoteVideo.play();
                 })
             })
         })

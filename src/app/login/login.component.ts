@@ -30,11 +30,11 @@ export class LoginComponent implements OnInit {
         this.loading = true;
         this.socketService.login(this.model.username)
             .subscribe(result => {
-                if (result) {
+                if (result.success) {
                     this.appSettingsService.setUsername(this.model.username);
                     this.router.navigate(['/']);
                 } else {
-                    this.error = 'Username incorrect';
+                    this.error = result.msg;
                     this.loading = false;
                 }
             });

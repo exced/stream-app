@@ -34,6 +34,8 @@ export class HomeComponent implements OnInit {
                         // accept
                         let confirm = { confirmed: true, peerid: notification.peerid };
                         this.confirmService.setConfirm(confirm);
+                        console.log('CONFIRM');
+                        console.log(notification);
                         this.router.navigate(['/user/' + notification.from]);
                     } else {
                         // hangup
