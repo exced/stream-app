@@ -1,20 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Router, CanActivate } from '@angular/router';
-import { SocketService } from '../services/socket.service';
+import { AppSettingsService } from '../app/app.settings.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
 
-    constructor(private router: Router, private authService: SocketService) {
-
+    constructor(
+        private router: Router,
+        private appSettingsService: AppSettingsService,
+    ) {
     }
 
     canActivate() {
-        //DEBUG if (this.authService.getToken()) {
-        //    return true;
-        //}
-        return true;
-        //this.router.navigate(['/login']);
-        //return false;
+        if (this.appSettingsService.getIsLoggedIn()) {
+            return true;
+        }
+        this.router.navigate(['/login']);
+        return false;
     }
 }

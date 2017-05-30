@@ -15,7 +15,7 @@ export class SocketService {
     private socket: any;
 
     constructor(private appSettingsService: AppSettingsService) {
-        this.URL = appSettingsService.URL;
+        this.URL = appSettingsService.getURL();
         this.socket = io(this.URL);
     }
 
@@ -68,7 +68,7 @@ export class SocketService {
      * @param contactname 
      */
     public call(callee: string): void {
-        this.socket.emit('call', this.appSettingsService.username, callee);
+        this.socket.emit('call', this.appSettingsService.getUsername(), callee);
     }
 
     /**
@@ -91,7 +91,7 @@ export class SocketService {
      */
     public login(username: string): Observable<any> {
         return new Observable(observer => {
-            let peerid = this.appSettingsService.peer.id;
+            let peerid = this.appSettingsService.getPeer().id;
             this.socket.emit('login', username, peerid);
 
             this.socket.on('login', (data) => {

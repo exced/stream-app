@@ -13,9 +13,9 @@ import { Confirm } from '../../services/confirm.service';
 })
 export class HomeComponent implements OnInit {
 
-    users = [];
-    notification: Notification; // id for call received notification
-    token: string;
+    private users = [];
+    private notification: Notification; // id for call received notification
+    private token: string;
 
     constructor(
         private router: Router,
@@ -34,8 +34,6 @@ export class HomeComponent implements OnInit {
                         // accept
                         let confirm = { confirmed: true, peerid: notification.peerid };
                         this.confirmService.setConfirm(confirm);
-                        console.log('CONFIRM');
-                        console.log(notification);
                         this.router.navigate(['/user/' + notification.from]);
                     } else {
                         // hangup

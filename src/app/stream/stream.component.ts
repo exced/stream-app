@@ -18,11 +18,11 @@ export class StreamComponent implements OnInit {
     @ViewChild('remoteVideo') remoteVideoRef: any;
     @ViewChild('localVideo') localVideoRef: any;
 
-    confirm: Confirm;
-    socketid: string;
-    peer: any;
-    remotePeerid: any;
-    userid: string = '';
+    private confirm: Confirm;
+    private socketid: string;
+    private peer: any;
+    private remotePeerid: any;
+    private userid: string = '';
 
     constructor(
         private appSettingsService: AppSettingsService,
@@ -31,7 +31,7 @@ export class StreamComponent implements OnInit {
         private confirmService: ConfirmService,
     ) {
         // local peer
-        this.peer = appSettingsService.peer;
+        this.peer = appSettingsService.getPeer();
         // call confirm subscription
         confirmService.getConfirm().subscribe(confirm => {
             this.confirm = confirm;
@@ -96,7 +96,12 @@ export class StreamComponent implements OnInit {
     }
 
     stop() {
-
+        this.peer.close();
+        let n = <any>navigator;
+        n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
+        n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            stream.getTracks()[0].stop();
+        })
     }
 
 }

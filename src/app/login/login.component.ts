@@ -10,9 +10,9 @@ import { AppSettingsService } from '../app.settings.service';
 })
 
 export class LoginComponent implements OnInit {
-    model: any = {};
-    loading = false;
-    error = '';
+    private model: any = {};
+    private loading = false;
+    private error = '';
 
     constructor(
         private router: Router,
@@ -32,6 +32,7 @@ export class LoginComponent implements OnInit {
             .subscribe(result => {
                 if (result.success) {
                     this.appSettingsService.setUsername(this.model.username);
+                    this.appSettingsService.setIsLoggedIn(true);
                     this.router.navigate(['/']);
                 } else {
                     this.error = result.msg;

@@ -9,7 +9,7 @@ export interface Confirm {
 @Injectable()
 export class ConfirmService {
 
-    confirm: BehaviorSubject<Confirm>;
+    private confirm: BehaviorSubject<Confirm>;
 
     constructor() {
         this.confirm = new BehaviorSubject({ confirmed: false, peerid: '' });

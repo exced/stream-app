@@ -5,9 +5,10 @@ declare var Peer: any;
 @Injectable()
 export class AppSettingsService {
 
-    URL: string = 'http://localhost:3000';
-    peer: any;
-    username: string;
+    private URL: string = 'http://localhost:3000';
+    private peer: any;
+    private username: string;
+    private isLoggedIn: boolean;
 
     constructor() {
         this.peer = new Peer({
@@ -25,9 +26,31 @@ export class AppSettingsService {
                 ]
             }
         });
+        this.isLoggedIn = false;
     }
+
+    public getURL(): string {
+        return this.URL;
+    }
+
+    public getPeer(): any {
+        return this.peer;
+    }
+
+    public getUsername(): string {
+        return this.username;
+    }
+
+    public getIsLoggedIn(): boolean {
+        return this.isLoggedIn;
+    }
+
 
     public setUsername(username: string): void {
         this.username = username;
+    }
+
+    public setIsLoggedIn(isLoggedIn: boolean) {
+        this.isLoggedIn = isLoggedIn;
     }
 }
