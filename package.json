@@ -1,14 +1,19 @@
 {
   "name": "stream-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
+  "angular-cli": {},
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "prepare": "cp -a electron/. dist",
+    "electron": "npm run prepare && electron dist",
+    "package": "npm run build && npm run prepare && ./node_modules/electron-packager/cli.js dist App --platform=darwin --arch=all --out=dist-app --overwrite",
+    "package-all": "npm run build && npm run prepare && ./node_modules/electron-packager/cli.js dist App --platform=all --arch=all --out=dist-app --overwrite"
   },
   "private": true,
   "dependencies": {
@@ -33,6 +38,8 @@
     "@types/jasmine": "2.5.38",
     "@types/node": "~6.0.60",
     "codelyzer": "~2.0.0",
+    "electron": "^1.4.4",
+    "electron-packager": "^8.1.0",
     "jasmine-core": "~2.5.2",
     "jasmine-spec-reporter": "~3.2.0",
     "karma": "~1.4.1",

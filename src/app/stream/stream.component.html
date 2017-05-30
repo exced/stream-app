@@ -11,7 +11,7 @@
 <!-- Buttons  -->
 <div class="row">
     <div class="col-xs-12">
-        <button (click)="call()" class="btn btn-primary">Call</button>
-        <button (click)="stop()" class="btn btn-primary">Stop</button>
+        <button *ngIf="!playing" (click)="call()" class="btn btn-primary">Call</button>
+        <button *ngIf="playing" (click)="stop()" class="btn btn-primary">Stop</button>
     </div>
 </div>

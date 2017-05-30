@@ -23,6 +23,9 @@ export class StreamComponent implements OnInit {
     private peer: any;
     private remotePeerid: any;
     private userid: string = '';
+    private localStream: any;
+    private remoteStream: any;
+    private playing: boolean = false;
 
     constructor(
         private appSettingsService: AppSettingsService,
@@ -52,30 +55,29 @@ export class StreamComponent implements OnInit {
     }
 
     receive() {
+        this.playing = true;
         let remoteVideo = this.remoteVideoRef.nativeElement;
         let localVideo = this.localVideoRef.nativeElement;
         let n = <any>navigator;
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
         n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            // ref to close
+            self.localStream = stream;
             localVideo.srcObject = stream;
             localVideo.play();
             let call = self.peer.call(self.remotePeerid, stream);
             call.on('stream', function (remotestream) {
+                // ref to close
+                self.remoteStream = remotestream;
                 remoteVideo.srcObject = remotestream;
                 remoteVideo.play();
-            })
+            });
         })
     }
 
-    connect() {
-        let conn = this.peer.connect(this.remotePeerid);
-        conn.on('open', function () {
-            conn.send('Message from that id');
-        });
-    }
-
     call() {
+        this.playing = true;
         this.socketService.call(this.userid);
         let remoteVideo = this.remoteVideoRef.nativeElement;
         let localVideo = this.localVideoRef.nativeElement;
@@ -83,25 +85,30 @@ export class StreamComponent implements OnInit {
         let self = this;
         n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
         n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
+            // ref to close
+            self.localStream = stream;
             localVideo.srcObject = stream;
             localVideo.play();
             self.peer.on('call', function (call) {
                 call.answer(stream);
                 call.on('stream', function (remotestream) {
+                    // ref to close
+                    self.remoteStream = remotestream;
                     remoteVideo.srcObject = remotestream;
                     remoteVideo.play();
                 })
-            })
+            });
         })
     }
 
     stop() {
-        this.peer.close();
-        let n = <any>navigator;
-        n.getUserMedia = (n.getUserMedia || n.webkitGetUserMedia || n.mozGetUserMedia || n.msGetUserMedia);
-        n.mediaDevices.getUserMedia({ video: true, audio: true }).then(function (stream) {
-            stream.getTracks()[0].stop();
-        })
+        this.playing = false;
+        this.remoteStream.getTracks().forEach(function (track) { track.stop() })
+        this.localStream.getTracks().forEach(function (track) { track.stop() })
+        let remoteVideo = this.remoteVideoRef.nativeElement;
+        let localVideo = this.localVideoRef.nativeElement;
+        remoteVideo.srcObject = null;
+        localVideo.srcObject = null;
     }
 
 }
