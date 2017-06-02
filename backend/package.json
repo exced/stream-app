@@ -1,8 +1,11 @@
 {
-  "name": "backend",
+  "name": "stream-app-rtc",
   "version": "1.0.0",
   "description": "Simple NodeJS and MongoDB backend.",
-  "main": "index.js",
+  "main": "app.js",
+  "scripts": {
+    "start": "./bin/www"
+  },
   "dependencies": {
     "express": "^4.15.3",
     "http": "0.0.0",
@@ -10,9 +13,9 @@
     "socket.io": "^2.0.1"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "mocha"
-  },
-  "author": "",
-  "license": "ISC"
+  "author": "exced",
+  "license": "MIT",
+  "engines": {
+    "node": "8.0.0"
+  }
 }
