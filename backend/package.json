@@ -7,7 +7,7 @@
     "start": "./bin/www"
   },
   "dependencies": {
-    "express": "^4.15.3",
+    "express": "^3.11.0",
     "http": "0.0.0",
     "peer": "^0.2.8",
     "socket.io": "^2.0.1"
