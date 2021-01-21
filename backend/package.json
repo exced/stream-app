@@ -10,7 +10,7 @@
     "express": "^4.15.3",
     "http": "0.0.0",
     "peer": "^0.2.8",
-    "socket.io": "^2.0.1"
+    "socket.io": "^2.4.0"
   },
   "devDependencies": {},
   "author": "exced",
